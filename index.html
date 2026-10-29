@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="description" content="Catat pengeluaran, pantau anggaran, dan lihat ringkasan keuangan pribadi.">
+  <title>Expense & Budget Visualizer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/script.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Expense & Budget Visualizer">
+        <span class="brand-mark" aria-hidden="true">◒</span>
+        <span>pocket<span class="brand-light">wise</span></span>
+      </a>
+      <div class="topbar-actions">
+        <span class="local-label"><span class="status-dot"></span> Data tersimpan di perangkat ini</span>
+        <button id="themeToggle" class="icon-button" type="button" aria-label="Ganti mode tampilan" title="Ganti mode tampilan">☼</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">KEUANGAN PRIBADI · LEBIH TERATUR</p>
+          <h1>Uangmu, <span>kendalimu.</span></h1>
+          <p class="hero-copy">Catat pengeluaran harian dan pahami ke mana uangmu pergi.</p>
+        </div>
+        <div class="hero-date">
+          <span class="date-icon" aria-hidden="true">▦</span>
+          <div><span class="muted-label">Hari ini</span><strong id="todayDate">—</strong></div>
+        </div>
+      </section>
+
+      <section class="summary-grid" aria-label="Ringkasan keuangan">
+        <article class="summary-card balance-card">
+          <div class="card-heading"><span>Total pengeluaran</span><span class="card-icon">↗</span></div>
+          <p class="summary-value" id="totalBalance">Rp0</p>
+          <p class="summary-foot">Akumulasi semua transaksi</p>
+        </article>
+        <article class="summary-card">
+          <div class="card-heading"><span>Jumlah transaksi</span><span class="card-icon neutral">≡</span></div>
+          <p class="summary-value" id="transactionCount">0</p>
+          <p class="summary-foot">Transaksi tercatat</p>
+        </article>
+        <article class="summary-card">
+          <div class="card-heading"><span>Kategori terbesar</span><span class="card-icon neutral">◎</span></div>
+          <p class="summary-value summary-category" id="topCategory">—</p>
+          <p class="summary-foot">Berdasarkan jumlah pengeluaran</p>
+        </article>
+        <article class="summary-card">
+          <div class="card-heading"><span>Pengeluaran bulan ini</span><span class="card-icon neutral">▦</span></div>
+          <p class="summary-value" id="monthlyTotal">Rp0</p>
+          <p class="summary-foot" id="monthlyCount">0 transaksi bulan ini</p>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel form-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">TRANSAKSI BARU</p><h2>Tambah pengeluaran</h2></div>
+            <span class="heading-symbol">＋</span>
+          </div>
+          <form id="expenseForm" novalidate>
+            <label for="itemName">Nama barang / transaksi</label>
+            <input id="itemName" name="itemName" type="text" maxlength="70" placeholder="Contoh: Makan siang" required>
+            <div class="form-row">
+              <div class="field">
+                <label for="amount">Jumlah (Rp)</label>
+                <input id="amount" name="amount" type="number" min="1" step="1" placeholder="25000" required>
+              </div>
+              <div class="field">
+                <label for="category">Kategori</label>
+                <select id="category" name="category" required>
+                  <option value="">Pilih kategori</option>
+                  <option value="Food">Makanan</option>
+                  <option value="Transport">Transportasi</option>
+                  <option value="Fun">Hiburan</option>
+                </select>
+              </div>
+            </div>
+            <p id="formError" class="form-error" role="alert" aria-live="polite"></p>
+            <button class="primary-button" type="submit"><span>＋</span> Tambahkan transaksi</button>
+            <p class="privacy-note"><span>▣</span> Datamu disimpan secara lokal di browser.</p>
+          </form>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">ANALISIS PENGELUARAN</p><h2>Ke mana uangmu pergi?</h2></div>
+            <span class="heading-symbol chart-symbol">◔</span>
+          </div>
+          <div class="chart-wrap" id="chartWrap">
+            <canvas id="expenseChart" role="img" aria-label="Diagram lingkaran distribusi pengeluaran berdasarkan kategori"></canvas>
+            <div class="chart-empty" id="chartEmpty"><span>◔</span><strong>Belum ada data</strong><small>Tambahkan transaksi untuk melihat grafik.</small></div>
+          </div>
+          <div id="chartLegend" class="chart-legend"></div>
+        </article>
+      </section>
+
+      <section class="panel transactions-panel">
+        <div class="panel-heading transaction-heading">
+          <div><p class="eyebrow">RIWAYAT KEUANGAN</p><h2>Transaksi terbaru</h2></div>
+          <div class="transaction-tools">
+            <label class="sr-only" for="sortBy">Urutkan transaksi</label>
+            <select id="sortBy" class="sort-select">
+              <option value="newest">Terbaru</option>
+              <option value="amount-desc">Jumlah terbesar</option>
+              <option value="amount-asc">Jumlah terkecil</option>
+              <option value="category">Kategori A–Z</option>
+            </select>
+            <button id="clearAll" class="text-button" type="button">Hapus semua</button>
+          </div>
+        </div>
+        <div class="transaction-list-header"><span>TRANSAKSI</span><span>KATEGORI</span><span>JUMLAH</span><span></span></div>
+        <div id="transactionList" class="transaction-list" aria-live="polite"></div>
+        <div id="emptyState" class="empty-state">
+          <span class="empty-illustration">↗</span>
+          <strong>Belum ada transaksi</strong>
+          <p>Transaksi yang kamu tambahkan akan muncul di sini.</p>
+        </div>
+        <div class="transaction-footer"><span id="listCount">Menampilkan 0 transaksi</span><span>Disimpan otomatis <span class="save-dot"></span></span></div>
+      </section>
+
+      <footer class="footer">
+        <span>pocketwise · Expense & Budget Visualizer</span>
+        <span>Dibuat untuk membantu kebiasaan finansial yang lebih baik.</span>
+      </footer>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+</body>
+</html>
